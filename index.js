@@ -1,149 +1,75 @@
-import axios from 'axios'
-import tarStream, { pack } from 'tar-stream'
-import { createGunzip } from 'zlib'
-import { pipeline as pipelineCb, Readable } from 'stream'
-import { promisify } from 'util'
-import { StringDecoder } from 'string_decoder'
-import { ok } from 'assert'
-const pipeline = promisify(pipelineCb);
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios_1 = __importDefault(require("axios"));
+const tar_stream_1 = __importDefault(require("tar-stream"));
+const zlib_1 = require("zlib");
+const stream_1 = require("stream");
+const util_1 = require("util");
+const string_decoder_1 = require("string_decoder");
+const pipeline = util_1.promisify(stream_1.pipeline);
 // export the function as default
 module.exports = alpineApk;
 // typescript will add the types and also the function to the exports, so set it before that
 exports = alpineApk;
-
-export type AlpineRepository = 'main' | 'community' | 'testing';
-export type AlpineVersion = 'latest-stable' | 'edge';
-export type AlpineArchitecture = 'aarch64' | 'armhf' | 'armv7' | 'ppc64le' | 's390x' | 'x86' | 'x86_64';
-export type AlpineDependencyType = 'package' | 'command' | 'library' | 'header';
-export interface AlpineDependency {
-    type: AlpineDependencyType
-    name: string
-    version?: string
-    link?: AlpinePackage
-    anti: boolean
-}
-export interface AlpinePackageProvides {
-    type: AlpineDependencyType
-    name: string
-    version?: string
-}
-export interface AlpinePackage {
-    name: string
-    pullChecksum: string
-    version: string
-    architecture: string
-    packageSize: number
-    packageSizeInstalled: number
-    description: string
-    url: string
-    license: string
-    origin: string
-    maintainer: string
-    timestamp: Date
-    commit: string
-    dependencies: AlpineDependency[]
-    provides: AlpinePackageProvides[]
-    repository: { name: string, version: string }
-}
-
-interface APKINDEXEntry {
-    /** content hash */
-    C: string
-    /** name */
-    P: string
-    /** version */
-    V: string
-    /** arch */
-    A: string
-    /** gzip size */
-    S: number
-    /** install size */
-    I: number
-    /** description */
-    T: string
-    /** url */
-    U: string
-    /** license */
-    L: string
-    /** origin */
-    o: string
-    /** maintainer */
-    m: string
-    /** timestamp */
-    t: Date
-    /** deps */
-    D: string
-    /** provides */
-    p: string
-    /** commit hash */
-    c: string
-}
-
-export async function alpineApk(version: AlpineVersion = 'latest-stable', repositories: AlpineRepository[] = ['main', 'community'], architecture: AlpineArchitecture = 'x86_64') {
-    let packageMetadata = await Promise.all(repositories.map(async repo => {
-        const url = `http://dl-cdn.alpinelinux.org/alpine/${version}/${repo}/${architecture}/APKINDEX.tar.gz`
-
-        let response = await axios(url, {
+async function alpineApk(version = 'latest-stable', repositories = ['main', 'community'], architecture = 'x86_64') {
+    let packageMetadata = await Promise.all(repositories.map(async (repo) => {
+        const url = `http://dl-cdn.alpinelinux.org/alpine/${version}/${repo}/${architecture}/APKINDEX.tar.gz`;
+        let response = await axios_1.default(url, {
             responseType: 'stream'
         });
-
-        let responseStream = response.data as Readable;
-        let unzip = createGunzip();
-        let tar = tarStream.extract();
-
+        let responseStream = response.data;
+        let unzip = zlib_1.createGunzip();
+        let tar = tar_stream_1.default.extract();
         let fileData = {
             APKINDEX: '',
             DESCRIPTION: ''
         };
-
         tar.on('entry', (header, stream, next) => {
             if (header.name in fileData) {
-                const stringDec = new StringDecoder();
+                const stringDec = new string_decoder_1.StringDecoder();
                 stream.on('data', chunk => {
-                    fileData[header.name as keyof typeof fileData] += stringDec.write(chunk);
+                    fileData[header.name] += stringDec.write(chunk);
                 });
                 stream.on('end', () => {
-                    fileData[header.name as keyof typeof fileData] += stringDec.end();
+                    fileData[header.name] += stringDec.end();
                     next();
                 });
-            } else {
+            }
+            else {
                 stream.on('end', next);
             }
             stream.resume();
         });
-
-        await pipeline(
-            responseStream,
-            unzip,
-            tar
-        );
-
-        if (!fileData.APKINDEX || !fileData.DESCRIPTION) throw new Error(`Failed to download ${url}`);
-
-        return { repo, ...fileData };
+        await pipeline(responseStream, unzip, tar);
+        if (!fileData.APKINDEX || !fileData.DESCRIPTION)
+            throw new Error(`Failed to download ${url}`);
+        return Object.assign({ repo }, fileData);
     }));
     const middleStage = packageMetadata.flatMap(meta => {
-        const repo: AlpinePackage['repository'] = {
+        const repo = {
             name: meta.repo,
             version: meta.DESCRIPTION
         };
         const packages = meta.APKINDEX.split('\n\n').map(pkgStr => {
             let lines = pkgStr.split('\n');
-            let index: APKINDEXEntry = {} as APKINDEXEntry;
+            let index = {};
             for (let line of lines) {
-                let c = line[0] as keyof APKINDEXEntry;
+                let c = line[0];
                 let rest = line.substr(2);
                 if (c == 'S' || c == 'I') {
                     index[c] = parseInt(rest, 10);
-                } else if (c == 't') {
+                }
+                else if (c == 't') {
                     index[c] = new Date(parseInt(rest, 10) * 1000);
-                } else {
+                }
+                else {
                     index[c] = rest;
                 }
             }
-
-            let pkg: AlpinePackage = {
+            let pkg = {
                 name: index.P,
                 architecture: index.A,
                 commit: index.c,
@@ -161,34 +87,33 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                 url: index.U,
                 version: index.V
             };
-
             if (index.p) {
                 let provides = index.p.split(' ');
                 for (let p of provides) {
-                    let type: string | undefined;
-                    let version: string | undefined;
-                    let name: string;
+                    let type;
+                    let version;
+                    let name;
                     if (p.includes(':'))
                         [type, p] = p.split(':');
                     if (p.includes('='))
                         [name, version] = p.split('=');
                     else
                         name = p;
-
-
                     if (!type) {
                         pkg.provides.push({
                             type: 'package',
                             name,
                             version: version || ''
                         });
-                    } else if ((type == 'so' || type == 'pc') && version !== undefined) {
+                    }
+                    else if ((type == 'so' || type == 'pc') && version !== undefined) {
                         pkg.provides.push({
                             type: type == 'so' ? 'library' : 'header',
                             name,
                             version: version
                         });
-                    } else {
+                    }
+                    else {
                         pkg.provides.push({
                             type: 'command',
                             name
@@ -196,40 +121,33 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                     }
                 }
             }
-
             return { pkg, depsStr: index.D };
         });
-
-        
-
         return packages;
     });
-    let provides = middleStage.flatMap(p => p.pkg.provides.map(prov => ({ pkg: p.pkg, ...prov })));
+    let provides = middleStage.flatMap(p => p.pkg.provides.map(prov => (Object.assign({ pkg: p.pkg }, prov))));
     let m1 = provides.flatMap(p => {
         let ret = [[`${p.name}:${p.type}`, p.pkg]];
-        if(p.version) ret.push([`${p.name}:${p.type}:${p.version}`, p.pkg]);
-        return ret as [[string, AlpinePackage]];
+        if (p.version)
+            ret.push([`${p.name}:${p.type}:${p.version}`, p.pkg]);
+        return ret;
     });
-    let m2 = middleStage.map(p => [`${p.pkg.name}:package`, p.pkg] as [string, AlpinePackage]);
-
+    let m2 = middleStage.map(p => [`${p.pkg.name}:package`, p.pkg]);
     let conc = m1.concat(m2);
-
     let providesMap = Object.fromEntries(conc);
-
     for (let { pkg, depsStr } of middleStage) {
-        if (!depsStr) continue;
-
+        if (!depsStr)
+            continue;
         let deps = depsStr.split(' ');
         for (let dep of deps) {
-            let anti: boolean
-            let type: string | undefined;
-            let version: string | undefined;
-            let name: string;
-
+            let anti;
+            let type;
+            let version;
+            let name;
             let dOrig = dep;
-
             anti = dep.startsWith('!');
-            if (anti) dep = dep.substr(1);
+            if (anti)
+                dep = dep.substr(1);
             if (dep.includes(':'))
                 [type, dep] = dep.split(':');
             if (dep.includes('>') || dep.includes('<'))
@@ -238,11 +156,10 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                 [name, version] = dep.split('=');
             else
                 name = dep;
-
             // resolve.
             if (type === undefined) {
                 // search for package
-                let link: AlpinePackage | undefined;
+                let link;
                 let found = version === undefined ? providesMap[`${name}:package`] : providesMap[`${name}:package:${version}`];
                 if (!found) {
                     // attempt to find direct package
@@ -250,13 +167,14 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                         (version === undefined || p.pkg.version === version));
                     if (!foundPackage) {
                         link = undefined;
-                    } else {
+                    }
+                    else {
                         link = foundPackage.pkg;
                     }
-                } else {
+                }
+                else {
                     link = found;
                 }
-
                 pkg.dependencies.push({
                     type: 'package',
                     name,
@@ -264,24 +182,24 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                     link,
                     anti
                 });
-            } else if (type === 'cmd') {
+            }
+            else if (type === 'cmd') {
                 // search for command
                 let found = providesMap[`${name}:command`];
                 let link = found ? found : undefined;
-
                 pkg.dependencies.push({
                     type: 'command',
                     name,
                     version,
                     link,
                     anti
-                })
-            } else {
+                });
+            }
+            else {
                 // search for library/header
-                let aType: AlpineDependencyType = type === 'so' ? 'library' : 'header';
+                let aType = type === 'so' ? 'library' : 'header';
                 let found = version === undefined ? providesMap[`${name}:${aType}`] : providesMap[`${name}:${aType}:${version}`];
                 let link = found ? found : undefined;
-
                 pkg.dependencies.push({
                     type: aType,
                     name,
@@ -294,3 +212,4 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
     }
     return middleStage.map(p => p.pkg);
 }
+exports.alpineApk = alpineApk;

@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "module": "commonjs",
+        "target": "es2017",
+        "lib": ["es2019"],
+        "declaration": true
+    },
+    "files": [
+        "index.ts"
+    ]
+}
