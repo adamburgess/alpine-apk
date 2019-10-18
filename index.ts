@@ -4,7 +4,7 @@ import { createGunzip } from 'zlib'
 import { pipeline as pipelineCb, Readable } from 'stream'
 import { promisify } from 'util'
 import { StringDecoder } from 'string_decoder'
-import { ok } from 'assert'
+import iterate from 'iterare'
 const pipeline = promisify(pipelineCb);
 
 // export the function as default
@@ -23,6 +23,57 @@ export interface AlpineDependency {
     link?: AlpinePackage
     anti: boolean
 }
+export type AlpinePackageMap = {
+    [name: string]: AlpinePackage
+}
+
+function findLink(map: AlpinePackageMap, dep: AlpineDependency): AlpinePackage | undefined {
+    // find it.
+    if (dep.type === 'package') {
+        if (dep.name in map) {
+            return map[dep.name];
+        }
+    }
+    // try to find it instead in the provides
+    let provide = iterate(Object.values(map))
+        .map(pkg =>
+            iterate(pkg.provides)
+                .map(prov => ({ pkg, prov }))
+        )
+        .flatten()
+        .find(pp => pp.prov.type === dep.type && pp.prov.name === dep.name);
+
+    if (provide) return provide.pkg;
+    return undefined;
+}
+
+class AlpineDependencyImpl implements AlpineDependency {
+    get link(): AlpinePackage | undefined {
+        if (this.resolvedLink === null) {
+            this.resolvedLink = findLink(this.map, this);
+        }
+        return this.resolvedLink;
+    }
+
+    private resolvedLink: AlpinePackage | undefined | null;
+    private map: AlpinePackageMap;
+
+    constructor(public type: AlpineDependencyType, public name: string, public anti: boolean, public version: string | undefined, map: AlpinePackageMap) {
+        Object.defineProperty(this, 'resolvedLink', {
+            enumerable: false,
+            writable: true
+        });
+        Object.defineProperty(this, 'map', {
+            enumerable: false,
+            writable: true
+        });
+        Object.defineProperty(this, 'link', { ...Object.getOwnPropertyDescriptor(AlpineDependencyImpl.prototype, 'link'), enumerable: true });
+
+        this.resolvedLink = null;
+        this.map = map;
+    }
+}
+
 export interface AlpinePackageProvides {
     type: AlpineDependencyType
     name: string
@@ -123,12 +174,18 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
 
         return { repo, ...fileData };
     }));
-    const middleStage = packageMetadata.flatMap(meta => {
+
+    const packageMap: {
+        [name: string]: AlpinePackage
+    } = {};
+
+    for (const meta of packageMetadata) {
         const repo: AlpinePackage['repository'] = {
             name: meta.repo,
             version: meta.DESCRIPTION
         };
-        const packages = meta.APKINDEX.split('\n\n').map(pkgStr => {
+
+        meta.APKINDEX.split('\n\n').forEach(pkgStr => {
             let lines = pkgStr.split('\n');
             let index: APKINDEXEntry = {} as APKINDEXEntry;
             for (let line of lines) {
@@ -197,100 +254,42 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                 }
             }
 
-            return { pkg, depsStr: index.D };
-        });
+            packageMap[pkg.name] = pkg;
 
-        
+            if (index.D) {
+                let deps = index.D.split(' ');
+                for (let dep of deps) {
+                    let anti: boolean
+                    let type: string | undefined;
+                    let version: string | undefined;
+                    let name: string;
 
-        return packages;
-    });
-    let provides = middleStage.flatMap(p => p.pkg.provides.map(prov => ({ pkg: p.pkg, ...prov })));
-    let m1 = provides.flatMap(p => {
-        let ret = [[`${p.name}:${p.type}`, p.pkg]];
-        if(p.version) ret.push([`${p.name}:${p.type}:${p.version}`, p.pkg]);
-        return ret as [[string, AlpinePackage]];
-    });
-    let m2 = middleStage.map(p => [`${p.pkg.name}:package`, p.pkg] as [string, AlpinePackage]);
+                    let dOrig = dep;
 
-    let conc = m1.concat(m2);
+                    anti = dep.startsWith('!');
+                    if (anti) dep = dep.substr(1);
+                    if (dep.includes(':'))
+                        [type, dep] = dep.split(':');
+                    if (dep.includes('>') || dep.includes('<'))
+                        [name] = dep.split(/[<>]/);
+                    else if (dep.includes('='))
+                        [name, version] = dep.split('=');
+                    else
+                        name = dep;
 
-    let providesMap = Object.fromEntries(conc);
-
-    for (let { pkg, depsStr } of middleStage) {
-        if (!depsStr) continue;
-
-        let deps = depsStr.split(' ');
-        for (let dep of deps) {
-            let anti: boolean
-            let type: string | undefined;
-            let version: string | undefined;
-            let name: string;
-
-            let dOrig = dep;
-
-            anti = dep.startsWith('!');
-            if (anti) dep = dep.substr(1);
-            if (dep.includes(':'))
-                [type, dep] = dep.split(':');
-            if (dep.includes('>') || dep.includes('<'))
-                [name] = dep.split(/[<>]/);
-            else if (dep.includes('='))
-                [name, version] = dep.split('=');
-            else
-                name = dep;
-
-            // resolve.
-            if (type === undefined) {
-                // search for package
-                let link: AlpinePackage | undefined;
-                let found = version === undefined ? providesMap[`${name}:package`] : providesMap[`${name}:package:${version}`];
-                if (!found) {
-                    // attempt to find direct package
-                    let foundPackage = middleStage.find(p => p.pkg.name === name &&
-                        (version === undefined || p.pkg.version === version));
-                    if (!foundPackage) {
-                        link = undefined;
-                    } else {
-                        link = foundPackage.pkg;
-                    }
-                } else {
-                    link = found;
+                    pkg.dependencies.push(new AlpineDependencyImpl(
+                        type === undefined ? 'package' :
+                            type === 'cmd' ? 'command' :
+                                type === 'so' ? 'library' : 'header',
+                        name,
+                        anti,
+                        version,
+                        packageMap
+                    ));
                 }
-
-                pkg.dependencies.push({
-                    type: 'package',
-                    name,
-                    version,
-                    link,
-                    anti
-                });
-            } else if (type === 'cmd') {
-                // search for command
-                let found = providesMap[`${name}:command`];
-                let link = found ? found : undefined;
-
-                pkg.dependencies.push({
-                    type: 'command',
-                    name,
-                    version,
-                    link,
-                    anti
-                })
-            } else {
-                // search for library/header
-                let aType: AlpineDependencyType = type === 'so' ? 'library' : 'header';
-                let found = version === undefined ? providesMap[`${name}:${aType}`] : providesMap[`${name}:${aType}:${version}`];
-                let link = found ? found : undefined;
-
-                pkg.dependencies.push({
-                    type: aType,
-                    name,
-                    version,
-                    link,
-                    anti
-                });
             }
-        }
+        });
     }
-    return middleStage.map(p => p.pkg);
+
+    return packageMap;
 }
