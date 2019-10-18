@@ -1,6 +1,6 @@
 {
   "name": "alpine-apk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "access to alpine package manager",
   "main": "index.js",
   "scripts": {
