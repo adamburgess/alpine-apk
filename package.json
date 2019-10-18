@@ -4,7 +4,7 @@
   "description": "access to alpine package manager",
   "main": "index.js",
   "scripts": {
-    "prepublish": "tsc",
+    "prepare": "tsc",
     "test": "mocha"
   },
   "repository": {
