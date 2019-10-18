@@ -204,19 +204,19 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
                 name: index.P,
                 architecture: index.A,
                 commit: index.c,
-                dependencies: [],
                 description: index.T,
                 license: index.L,
                 maintainer: index.m,
                 origin: index.o,
                 packageSize: index.S,
                 packageSizeInstalled: index.I,
-                provides: [],
                 pullChecksum: index.C,
                 repository: repo,
                 timestamp: index.t,
                 url: index.U,
-                version: index.V
+                version: index.V,
+                dependencies: [],
+                provides: [],
             };
 
             if (index.p) {
