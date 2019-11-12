@@ -48,7 +48,7 @@ I wanted to rebuild my docker images when nodejs _and/or nodejs's dependencies_ 
 This allows me to do that:
 
 ```js
-import alpineApk from 'alpine-apk'
+import { alpineApk } from 'alpine-apk'
 import stringify from 'fast-safe-stringify'
 
 const pkgs = await alpineApk();
