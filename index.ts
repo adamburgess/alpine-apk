@@ -7,11 +7,6 @@ import { StringDecoder } from 'string_decoder'
 import iterate from 'iterare'
 const pipeline = promisify(pipelineCb);
 
-// export the function as default
-module.exports = alpineApk;
-// typescript will add the types and also the function to the exports, so set it before that
-exports = alpineApk;
-
 export type AlpineRepository = 'main' | 'community' | 'testing';
 export type AlpineVersion = 'latest-stable' | 'edge';
 export type AlpineArchitecture = 'aarch64' | 'armhf' | 'armv7' | 'ppc64le' | 's390x' | 'x86' | 'x86_64';
@@ -293,3 +288,5 @@ export async function alpineApk(version: AlpineVersion = 'latest-stable', reposi
 
     return packageMap;
 }
+
+export const findPackages = alpineApk;
