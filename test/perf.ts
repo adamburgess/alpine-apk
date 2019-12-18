@@ -2,7 +2,6 @@ import 'mocha'
 import { expect } from 'chai'
 import fs from 'fs'
 import { AlpineApk } from '../index'
-import stringify from 'fast-safe-stringify'
 
 describe('performance', function () {
     let apk = new AlpineApk();
@@ -27,7 +26,7 @@ describe('performance', function () {
         for(let name in apk.pkgNames) {
             map[name] = apk.recursiveGetHash(name);
         }
-        const stringed = stringify(map);
+        const stringed = JSON.stringify(map);
         expect(stringed.length).to.be.greaterThan(1_000_000);
     })
 })

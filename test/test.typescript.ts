@@ -1,7 +1,6 @@
 import 'mocha'
 import { expect } from 'chai'
 
-import stringify from 'fast-safe-stringify'
 import { AlpineApk } from '../index.js';
 
 describe('alpine-apk (typescript)', function () {
