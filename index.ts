@@ -112,7 +112,7 @@ export class AlpineApk {
     }
 
     get(name: string) {
-        return this.pkgNames[name];
+        return this.pkgs[name];
     }
 
     recursiveGetHash(name: string) {
