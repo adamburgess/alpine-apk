@@ -2,22 +2,29 @@ import 'mocha'
 import { expect } from 'chai'
 
 import stringify from 'fast-safe-stringify'
+import { AlpineApk } from '../index.js';
 
 describe('alpine-apk (typescript)', function () {
     it('can be requried', async function () {
-        let { alpineApk } = await import('../index.js');
-        expect(alpineApk).to.be.a('function');
+        let { AlpineApk } = await import('../index.js');
+        expect(AlpineApk).to.be.a('function');
     });
+
+    let pkgs: any;
+
+    let alpineApk: AlpineApk;
 
     it('fetches packages', async function () {
         this.timeout(5000);
 
-        let { alpineApk } = await import('../index.js');
+        let { AlpineApk } = await import('../index.js');
+        alpineApk = new AlpineApk();
 
-        let packages = await alpineApk('latest-stable', ['main', 'community']);
+        await alpineApk.update();
 
-        let nodeJsCurrent = packages['nodejs-current'];
+        let nodeJsCurrent = alpineApk.get('nodejs-current');
         expect(nodeJsCurrent).to.not.be.undefined;
-        expect(stringify(nodeJsCurrent)).to.include('musl');
+        expect(alpineApk.recursiveGetHash('nodejs-current')).to.include('musl');
     });
+    
 });
