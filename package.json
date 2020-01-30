@@ -25,7 +25,7 @@
   "homepage": "https://github.com/adamburgess/alpine-apk#readme",
   "devDependencies": {
     "@types/chai": "^4.2.7",
-    "@types/mocha": "^5.2.7",
+    "@types/mocha": "^7.0.1",
     "@types/node": "^13.1.0",
     "@types/tar-stream": "^1.6.1",
     "chai": "^4.2.0",
