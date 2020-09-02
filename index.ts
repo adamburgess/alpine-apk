@@ -16,6 +16,10 @@ namespace AlpineApk {
         deps: string[]
         version: string
     }
+
+    export interface AlpinePackageMap {
+        [name: string]: AlpinePackage
+    }
 }
 
 async function downloadRepo(repo: string, version: string, arch: string): Promise<AlpineApk.AlpineRepository> {
@@ -62,6 +66,26 @@ async function downloadRepo(repo: string, version: string, arch: string): Promis
     };
 }
 
+function getDependencyTreeInternal(
+    name: string,
+    pkg: AlpineApk.AlpinePackage,
+    seen: Set<AlpineApk.AlpinePackage>,
+    packages: AlpineApk.AlpinePackageMap
+) {
+    let output = name + '@' + pkg.version + ',';
+    for(const dep of pkg.deps) {
+        const dPkg = packages[dep];
+        if(dPkg === undefined) {
+            continue;
+        }
+        if(!seen.has(dPkg)) {
+            seen.add(dPkg);
+            output += getDependencyTreeInternal(dep, dPkg, seen, packages);
+        }
+    }
+    return output;
+}
+
 class AlpineApk {
     async update(version = 'edge', arch = 'x86_64', repos = ['main', 'community']) {
         const rawRepos = await Promise.all(repos.map(r => downloadRepo(r, version, arch)));
@@ -69,13 +93,9 @@ class AlpineApk {
         return rawRepos;
     }
 
-    pkgs: {
-        [name: string]: AlpineApk.AlpinePackage
-    } = {};
+    pkgs: AlpineApk.AlpinePackageMap = {};
 
-    pkgNames: {
-        [name: string]: AlpineApk.AlpinePackage
-    } = {};
+    pkgNames: AlpineApk.AlpinePackageMap = {};
 
     setRepositories(repositories: AlpineApk.AlpineRepository[]) {
         for (const repo of repositories) {
@@ -112,25 +132,13 @@ class AlpineApk {
         return this.pkgs[name];
     }
 
-    getDependencyTree(name: string) {
+    getDependencyTree(...names: string[]) {
         const seen = new Set<AlpineApk.AlpinePackage>();
-
-        return this.getDependencyTreeInternal(name, this.pkgNames[name], seen);
-    }
-
-    private getDependencyTreeInternal(name: string, pkg: AlpineApk.AlpinePackage, seen: Set<AlpineApk.AlpinePackage>) {
-        let output = name + '@' + pkg.version + ',';
-        for(const dep of pkg.deps) {
-            const dPkg = this.pkgs[dep];
-            if(dPkg === undefined) {
-                continue;
-            }
-            if(!seen.has(dPkg)) {
-                seen.add(dPkg);
-                output += this.getDependencyTreeInternal(dep, dPkg, seen);
-            }
+        let tree = '';
+        for(const name of names) {
+            tree += getDependencyTreeInternal(name, this.pkgNames[name], seen, this.pkgs);
         }
-        return output;
+        return tree;
     }
 }
 

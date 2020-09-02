@@ -24,6 +24,7 @@ describe('alpine-apk (typescript)', function () {
         const nodeJsCurrent = alpineApk.get('nodejs-current');
         expect(nodeJsCurrent).to.not.be.undefined;
         expect(alpineApk.getDependencyTree('nodejs-current')).to.include('musl');
+        expect(alpineApk.getDependencyTree('nodejs-current', 'build-base')).to.include('musl');
     });
     
 });
