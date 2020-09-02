@@ -5,7 +5,7 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "module": "commonjs",
-        "target": "es2017",
+        "target": "es2020",
         "lib": ["es2019"],
         "declaration": true
     },
