@@ -14,7 +14,7 @@ describe('performance', function () {
     });
     it('should get package', function () {
         this.timeout(500);
-        expect(apk.getDependencyTree('nodejs')).to.include('libuv');
+        expect(apk.getDependencyTree('nodejs')).to.include('nghttp2-libs');
         expect(apk.getDependencyTree('gdb')).to.include('libgdbm');
     });
     it('should get all', function () {
