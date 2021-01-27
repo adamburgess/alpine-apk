@@ -87,7 +87,7 @@ function getDependencyTreeInternal(
 }
 
 class AlpineApk {
-    async update(version = 'edge', arch = 'x86_64', repos = ['main', 'community']) {
+    async update(version = 'latest-stable', arch = 'x86_64', repos = ['main', 'community']) {
         const rawRepos = await Promise.all(repos.map(r => downloadRepo(r, version, arch)));
         this.setRepositories(rawRepos);
         return rawRepos;
