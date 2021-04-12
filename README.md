@@ -1,5 +1,7 @@
 ## alpine-apk
 
+[![test](https://github.com/adamburgess/alpine-apk/actions/workflows/workflow.yml/badge.svg)](https://github.com/adamburgess/alpine-apk/actions/workflows/workflow.yml)
+
 Use this package to read the contents of [Alpine's package repository](https://pkgs.alpinelinux.org/packages).
 
 Usage:
