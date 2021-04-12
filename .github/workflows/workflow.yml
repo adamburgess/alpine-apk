@@ -15,6 +15,7 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-node${{ matrix.node }}-${{ hashFiles('./package.json', './pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-node${{ matrix.node }}-
       - name: install dependencies
         run: npm install
       - name: build package
