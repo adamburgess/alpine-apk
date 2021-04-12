@@ -18,7 +18,7 @@ describe('performance', function () {
         expect(apk.getDependencyTree('gdb')).to.include('libgdbm');
     });
     it('should get all', function () {
-        this.timeout(500);
+        this.timeout(1000);
         const map: {
             [name: string]: string
         } = {};
