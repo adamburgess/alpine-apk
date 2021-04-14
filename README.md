@@ -11,8 +11,7 @@ import AlpineApk from 'alpine-apk'
 // or, const AlpineApk = require('alpine-apk')
 
 /* by default:
-    version is 'edge'. See versions here: http://dl-cdn.alpinelinux.org/alpine/
-    You may want to use 'latest-stable' instead (e.g. the docker alpine image is latest-stable)
+    version is 'latest-stable'. See versions here: http://dl-cdn.alpinelinux.org/alpine/
     architecture is 'x86_64'
     repos are ['main', 'community']
 */
