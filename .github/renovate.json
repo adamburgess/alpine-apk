@@ -1,14 +1,17 @@
 {
     "extends": [
-        "config:base",
-        "schedule:monthly",
-        "group:allNonMajor"
+        "config:base"
     ],
-    "rangeStrategy": "bump",
+    "rangeStrategy": "replace",
     "packageRules": [
         {
           "packageNames": ["node"],
           "enabled": false
+        },
+        {
+            "matchDepTypes": ["devDependencies"],
+            "groupName": "dev dependencies",
+            "rangeStrategy": "bump"
         }
     ],
     "prHourlyLimit": 999
