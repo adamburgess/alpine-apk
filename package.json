@@ -18,11 +18,6 @@
     "package",
     "manager"
   ],
-  "exports": {
-    ".": {
-      "import": "./index.js"
-    }
-  },
   "types": "index.d.ts",
   "author": "Adam Burgess",
   "license": "MIT",
