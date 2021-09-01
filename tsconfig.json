@@ -4,12 +4,16 @@
         "strict": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
-        "module": "commonjs",
-        "target": "es2020",
-        "lib": ["es2019"],
+        "module": "ES2020",
+        "allowJs": true,
+        "target": "es2021",
+        "lib": [
+            "ES2021"
+        ],
         "declaration": true
     },
     "files": [
         "index.ts"
-    ]
+    ],
+    "include": ["test"]
 }

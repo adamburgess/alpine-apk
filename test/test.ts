@@ -1,11 +1,11 @@
 import 'mocha'
 import { expect } from 'chai'
 
-import AlpineApkStatic from '../index.js';
+import AlpineApkStatic from '..';
 
-describe('alpine-apk (typescript)', function () {
-    it('can be requried', async function () {
-        const { default: AlpineApk } = await import('../index.js');
+describe('alpine-apk', function () {
+    it('can be imported', async function () {
+        const { default: AlpineApk } = await import('..');
         expect(AlpineApk).to.be.a('function');
         let alpineApk = new AlpineApk();
         expect(alpineApk.update).to.be.a('function');
@@ -16,7 +16,7 @@ describe('alpine-apk (typescript)', function () {
     it('fetches packages', async function () {
         this.timeout(5000);
 
-        const { default: AlpineApk } = await import('../index.js');
+        const { default: AlpineApk } = await import('..');
         alpineApk = new AlpineApk();
 
         await alpineApk.update();

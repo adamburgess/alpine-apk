@@ -1,6 +1,6 @@
 import 'mocha'
 import { expect } from 'chai'
-import AlpineApk from '../index'
+import AlpineApk from '../index.js'
 
 describe('performance', function () {
     const apk = new AlpineApk();

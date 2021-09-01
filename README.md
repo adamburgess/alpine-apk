@@ -8,7 +8,6 @@ Usage:
 
 ```js
 import AlpineApk from 'alpine-apk'
-// or, const AlpineApk = require('alpine-apk')
 
 /* by default:
     version is 'latest-stable'. See versions here: http://dl-cdn.alpinelinux.org/alpine/

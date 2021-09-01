@@ -6,23 +6,21 @@ import { promisify } from 'util'
 import { StringDecoder } from 'string_decoder'
 const pipeline = promisify(pipelineCb);
 
-namespace AlpineApk {
-    export interface AlpineRepository {
-        name: string
-        content: string
-        description: string
-    }
-    export interface AlpinePackage {
-        deps: string[]
-        version: string
-    }
-
-    export interface AlpinePackageMap {
-        [name: string]: AlpinePackage
-    }
+export interface AlpineRepository {
+    name: string
+    content: string
+    description: string
+}
+export interface AlpinePackage {
+    deps: string[]
+    version: string
 }
 
-async function downloadRepo(repo: string, version: string, arch: string): Promise<AlpineApk.AlpineRepository> {
+export interface AlpinePackageMap {
+    [name: string]: AlpinePackage
+}
+
+async function downloadRepo(repo: string, version: string, arch: string): Promise<AlpineRepository> {
     const url = `http://dl-cdn.alpinelinux.org/alpine/${version}/${repo}/${arch}/APKINDEX.tar.gz`
 
     const response = await fetch(url);
@@ -70,9 +68,9 @@ async function downloadRepo(repo: string, version: string, arch: string): Promis
 
 function getDependencyTreeInternal(
     name: string,
-    pkg: AlpineApk.AlpinePackage,
-    seen: Set<AlpineApk.AlpinePackage>,
-    packages: AlpineApk.AlpinePackageMap
+    pkg: AlpinePackage,
+    seen: Set<AlpinePackage>,
+    packages: AlpinePackageMap
 ) {
     let output = name + '@' + pkg.version + ',';
     for (const dep of pkg.deps) {
@@ -88,21 +86,21 @@ function getDependencyTreeInternal(
     return output;
 }
 
-class AlpineApk {
+export class AlpineApk {
     async update(version = 'latest-stable', arch = 'x86_64', repos = ['main', 'community']) {
         const rawRepos = await Promise.all(repos.map(r => downloadRepo(r, version, arch)));
         this.setRepositories(rawRepos);
         return rawRepos;
     }
 
-    pkgs: AlpineApk.AlpinePackageMap = {};
+    pkgs: AlpinePackageMap = {};
 
-    pkgNames: AlpineApk.AlpinePackageMap = {};
+    pkgNames: AlpinePackageMap = {};
 
-    setRepositories(repositories: AlpineApk.AlpineRepository[]) {
+    setRepositories(repositories: AlpineRepository[]) {
         for (const repo of repositories) {
             for (const pkgLines of repo.content.split('\n\n')) {
-                const pkg: AlpineApk.AlpinePackage = {
+                const pkg: AlpinePackage = {
                     version: '',
                     deps: []
                 };
@@ -135,7 +133,7 @@ class AlpineApk {
     }
 
     getDependencyTree(...names: string[]) {
-        const seen = new Set<AlpineApk.AlpinePackage>();
+        const seen = new Set<AlpinePackage>();
         let tree = '';
         for (const name of names) {
             tree += getDependencyTreeInternal(name, this.pkgNames[name], seen, this.pkgs);
@@ -144,4 +142,4 @@ class AlpineApk {
     }
 }
 
-export = AlpineApk;
+export default AlpineApk;
