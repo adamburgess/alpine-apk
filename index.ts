@@ -27,6 +27,8 @@ async function downloadRepo(repo: string, version: string, arch: string): Promis
 
     const response = await fetch(url);
 
+    if (response.status !== 200 || response.body === null) throw new Error(`Failed to download ${url}`);
+
     const unzip = createGunzip();
     const tar = tarStream.extract();
 
@@ -73,12 +75,12 @@ function getDependencyTreeInternal(
     packages: AlpineApk.AlpinePackageMap
 ) {
     let output = name + '@' + pkg.version + ',';
-    for(const dep of pkg.deps) {
+    for (const dep of pkg.deps) {
         const dPkg = packages[dep];
-        if(dPkg === undefined) {
+        if (dPkg === undefined) {
             continue;
         }
-        if(!seen.has(dPkg)) {
+        if (!seen.has(dPkg)) {
             seen.add(dPkg);
             output += getDependencyTreeInternal(dep, dPkg, seen, packages);
         }
@@ -109,18 +111,18 @@ class AlpineApk {
                     const rest = line.substr(2);
                     if (c === 'P') {
                         this.pkgs[rest] = this.pkgNames[rest] = pkg;
-                    } else if(c === 'D') {
+                    } else if (c === 'D') {
                         pkg.deps = rest.split(' ').map(d => {
-                            if(d.startsWith('!')) d = d.substr(1);
+                            if (d.startsWith('!')) d = d.substr(1);
                             [d] = d.split(/[=<>~]/);
                             return d;
                         });
-                    } else if(c === 'p') {
-                        for(let p of rest.split(' ')) {
+                    } else if (c === 'p') {
+                        for (let p of rest.split(' ')) {
                             [p] = p.split('=');
                             this.pkgs[p] = pkg;
                         }
-                    } else if(c === 'V') {
+                    } else if (c === 'V') {
                         pkg.version = rest;
                     }
                 }
@@ -135,7 +137,7 @@ class AlpineApk {
     getDependencyTree(...names: string[]) {
         const seen = new Set<AlpineApk.AlpinePackage>();
         let tree = '';
-        for(const name of names) {
+        for (const name of names) {
             tree += getDependencyTreeInternal(name, this.pkgNames[name], seen, this.pkgs);
         }
         return tree;
