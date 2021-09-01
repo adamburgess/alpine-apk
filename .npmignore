@@ -3,3 +3,4 @@ test
 tsconfig.json
 index.ts
 pnpm-lock.yaml
+CHANGELOG.md
