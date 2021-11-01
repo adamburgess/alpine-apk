@@ -136,7 +136,9 @@ export class AlpineApk {
         const seen = new Set<AlpinePackage>();
         let tree = '';
         for (const name of names) {
-            tree += getDependencyTreeInternal(name, this.pkgNames[name], seen, this.pkgs);
+            const pkg = this.pkgNames[name] ?? this.pkgs[name];
+            if (pkg === undefined) continue;
+            tree += getDependencyTreeInternal(name, this.pkgNames[name] ?? this.pkgs[name], seen, this.pkgs);
         }
         return tree;
     }

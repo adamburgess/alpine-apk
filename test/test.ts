@@ -7,7 +7,7 @@ describe('alpine-apk', function () {
     it('can be imported', async function () {
         const { default: AlpineApk } = await import('../index.js');
         expect(AlpineApk).to.be.a('function');
-        let alpineApk = new AlpineApk();
+        const alpineApk = new AlpineApk();
         expect(alpineApk.update).to.be.a('function');
     });
 
@@ -25,6 +25,7 @@ describe('alpine-apk', function () {
         expect(nodeJsCurrent).to.not.be.undefined;
         expect(alpineApk.getDependencyTree('nodejs-current')).to.include('musl');
         expect(alpineApk.getDependencyTree('nodejs-current', 'build-base')).to.include('musl');
+        expect(alpineApk.getDependencyTree('openssh-client')).to.not.be.undefined;
     });
     
 });
