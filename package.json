@@ -29,7 +29,6 @@
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.11.6",
-    "@types/node-fetch": "^3.0.2",
     "@types/tar-stream": "^2.2.2",
     "@typescript-eslint/eslint-plugin": "^5.2.0",
     "@typescript-eslint/parser": "^5.2.0",
@@ -40,6 +39,6 @@
   },
   "dependencies": {
     "node-fetch": "^3.0.0",
-    "tar-stream": "^2.2.0"
+    "tar-stream": "^2.1.4"
   }
 }
