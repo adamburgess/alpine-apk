@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "node-fetch": "^3.0.0",
-    "tar-stream": "^2.1.4"
+    "tar-stream": "^3.0.0"
   }
 }
