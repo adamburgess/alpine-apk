@@ -1,10 +1,9 @@
-import fetch from 'node-fetch'
 import tarStream from 'tar-stream'
 import { createGunzip } from 'zlib'
-import { pipeline as pipelineCb } from 'stream'
-import { promisify } from 'util'
+import { pipeline } from 'stream/promises'
 import { StringDecoder } from 'string_decoder'
-const pipeline = promisify(pipelineCb);
+import { Readable } from 'stream'
+import type { ReadableStream } from 'stream/web'
 
 export interface AlpineRepository {
     name: string
@@ -52,7 +51,7 @@ async function downloadRepo(repo: string, version: string, arch: string): Promis
     });
 
     await pipeline(
-        response.body,
+        Readable.fromWeb(response.body as ReadableStream),
         unzip,
         tar
     );

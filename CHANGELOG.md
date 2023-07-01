@@ -1,3 +1,8 @@
+# 2.0.0
+
+Breaking: require nodejs 18+.
+Removes node-fetch, uses native fetch.
+
 # 1.1.0
 
 Allow getting dependency trees of provides as well as packages.  
