@@ -127,17 +127,17 @@ export class AlpineApk {
         }
     }
 
-    get(name: string) {
-        return this.pkgs[name];
+    get(name: string): AlpinePackage | undefined {
+        return this.pkgNames[name] ?? this.pkgs[name];
     }
 
     getDependencyTree(...names: string[]) {
         const seen = new Set<AlpinePackage>();
         let tree = '';
         for (const name of names) {
-            const pkg = this.pkgNames[name] ?? this.pkgs[name];
+            const pkg = this.get(name)!;
             if (pkg === undefined) continue;
-            tree += getDependencyTreeInternal(name, this.pkgNames[name] ?? this.pkgs[name], seen, this.pkgs);
+            tree += getDependencyTreeInternal(name, pkg, seen, this.pkgs);
         }
         return tree;
     }

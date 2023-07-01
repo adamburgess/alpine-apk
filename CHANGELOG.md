@@ -1,3 +1,8 @@
+# 2.0.1
+
+Fix package provides overriding packages. This happens when alpine has multiple packages that provide the same binary.
+For example, nodejs-current and nodejs.
+
 # 2.0.0
 
 Breaking: require nodejs 18+.

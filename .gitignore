@@ -1,5 +1,5 @@
 node_modules
 index.js
 repos.json
-test/*.js
+*.js
 *.d.ts
