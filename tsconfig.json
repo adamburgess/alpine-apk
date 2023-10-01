@@ -3,8 +3,8 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "esModuleInterop": true,
-        "moduleResolution": "node16",
-        "module": "es2022",
+        "moduleResolution": "nodenext",
+        "module": "nodenext",
         "allowJs": true,
         "target": "es2022",
         "lib": [
