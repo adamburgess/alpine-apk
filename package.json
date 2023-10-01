@@ -29,16 +29,16 @@
   },
   "homepage": "https://github.com/adamburgess/alpine-apk#readme",
   "devDependencies": {
-    "@types/chai": "^4.3.5",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^20.3.3",
-    "@types/tar-stream": "^2.2.2",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "^5.60.1",
-    "chai": "^4.3.7",
-    "eslint": "^8.44.0",
+    "@types/chai": "^4.3.6",
+    "@types/mocha": "^10.0.2",
+    "@types/node": "^20.8.0",
+    "@types/tar-stream": "^3.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
+    "@typescript-eslint/parser": "^6.7.3",
+    "chai": "^4.3.10",
+    "eslint": "^8.50.0",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "tar-stream": "^3.1.4"
