@@ -37,7 +37,7 @@ async function downloadRepo(repo: string, version: string, arch: string): Promis
     tar.on('entry', (header, stream, next) => {
         if (header.name in fileData) {
             const stringDec = new StringDecoder();
-            stream.on('data', chunk => {
+            stream.on('data', (chunk: Buffer) => {
                 fileData[header.name as keyof typeof fileData] += stringDec.write(chunk);
             });
             stream.on('end', () => {

@@ -8,6 +8,7 @@ describe('alpine-apk', function () {
         const { default: AlpineApk } = await import('../index.js');
         expect(AlpineApk).to.be.a('function');
         const alpineApk = new AlpineApk();
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(alpineApk.update).to.be.a('function');
     });
 
